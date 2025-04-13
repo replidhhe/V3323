@@ -1,0 +1,20 @@
+{
+    "bot": {
+      "prefix": ".",
+      "listenEvents": true,
+      "selfListen": false,
+      "forceLogin": true,
+      "botName": "NexaSim V2",
+      "ownerName": "Hridoy",
+      "ownerUid": "61552837791926",
+      "adminUids": ["61552837791926"]
+    },
+    "logging": {
+      "level": "info"
+    },
+    "retries": {
+      "maxRetries": 3,
+      "retryDelay": 5000
+    },
+    "language": "bn"
+  }

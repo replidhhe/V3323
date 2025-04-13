@@ -1,0 +1,23 @@
+{
+  "name": "nexasim-v2",
+  "version": "1.0.0",
+  "description": "A professional Facebook Messenger bot with command system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bot",
+    "facebook",
+    "messenger",
+    "priyanshu-fca"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "gradient-string": "^2.0.2",
+    "priyanshu-fca": "^3.0.0"
+  }
+}
