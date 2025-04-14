@@ -3,17 +3,32 @@ const config = require('../../config/config.json');
 const language = require(`../../languages/${config.language}.json`);
 const { connect } = require('../../includes/database');
 const { updateUserMessageCount } = require('../../includes/database/user');
+const fs = require('fs');
+const path = require('path');
 
 class EventHandler {
   constructor(api, commandHandler) {
     this.api = api;
     this.commandHandler = commandHandler;
     this.db = null;
+    this.events = new Map();
     this.initDb();
+    this.loadEvents();
   }
 
   async initDb() {
     this.db = await connect();
+  }
+
+  loadEvents() {
+    const eventDir = path.join(__dirname, '../../modules/events');
+    const files = fs.readdirSync(eventDir).filter(file => file.endsWith('.js'));
+
+    for (const file of files) {
+      const event = require(path.join(eventDir, file));
+      this.events.set(event.name, event);
+      logger.info(`Loaded event: ${event.name}`);
+    }
   }
 
   async handleEvent(event) {
@@ -23,6 +38,23 @@ class EventHandler {
     }
 
     logger.verbose(`Event received in eventHandler: ${JSON.stringify(event, null, 2)}`);
+
+ 
+    if (event.logMessageType === "log:subscribe") {
+      const joinEvent = this.events.get("join");
+      if (joinEvent) {
+        await joinEvent.handle({ api: this.api, event });
+      }
+    }
+
+
+    if (event.logMessageType === "log:unsubscribe") {
+      const leaveEvent = this.events.get("leave");
+      if (leaveEvent) {
+        await leaveEvent.handle({ api: this.api, event });
+      }
+    }
+
 
     if (event.type === 'message' || event.type === 'message_reply') {
       const isGroup = event.isGroup ? 'Group' : 'Inbox';
