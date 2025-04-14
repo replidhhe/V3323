@@ -131,7 +131,7 @@ async function startBot() {
 
     process.on('unhandledRejection', (reason, promise) => {
       logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      process.exit(1);
+      // process.exit(1);
     });
 
   } catch (err) {

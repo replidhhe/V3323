@@ -39,7 +39,7 @@ class EventHandler {
 
     logger.verbose(`Event received in eventHandler: ${JSON.stringify(event, null, 2)}`);
 
- 
+    // Handle join event
     if (event.logMessageType === "log:subscribe") {
       const joinEvent = this.events.get("join");
       if (joinEvent) {
@@ -47,7 +47,7 @@ class EventHandler {
       }
     }
 
-
+    // Handle leave event
     if (event.logMessageType === "log:unsubscribe") {
       const leaveEvent = this.events.get("leave");
       if (leaveEvent) {
@@ -55,7 +55,7 @@ class EventHandler {
       }
     }
 
-
+    // Handle message and reply events
     if (event.type === 'message' || event.type === 'message_reply') {
       const isGroup = event.isGroup ? 'Group' : 'Inbox';
       this.api.getUserInfo(event.senderID, (err, userInfo) => {
@@ -73,6 +73,21 @@ class EventHandler {
 
       if (this.db) {
         await updateUserMessageCount(this.db, event.senderID, event.threadID);
+      }
+
+      // Handle replies
+      if (event.type === 'message_reply' && global.replyHandlers?.has(event.messageReply.messageID)) {
+        logger.info(`Reply detected for message ID: ${event.messageReply.messageID}`);
+        const replyData = global.replyHandlers.get(event.messageReply.messageID);
+        logger.info(`Reply handler found: ${JSON.stringify(replyData)}`);
+        const command = require(`../../modules/commands/${replyData.commandName}`);
+        if (command.onReply) {
+          logger.info(`Calling onReply for command: ${replyData.commandName}`);
+          await command.onReply({ api: this.api, event });
+        } else {
+          logger.warn(`No onReply method found for command: ${replyData.commandName}`);
+        }
+        return;
       }
 
       if (event.body && event.body.toLowerCase() === 'ping') {
