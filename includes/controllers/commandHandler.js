@@ -3,13 +3,20 @@ const path = require('path');
 const logger = require('../logger');
 const config = require('../../config/config.json');
 const language = require(`../../languages/${config.language}.json`);
+const { connect } = require('../../includes/database');
 
 class CommandHandler {
   constructor(api) {
     this.api = api;
     this.commands = new Map();
     this.cooldowns = new Map();
+    this.db = null;
+    this.initDb();
     this.loadCommands();
+  }
+
+  async initDb() {
+    this.db = await connect();
   }
 
   loadCommands() {
@@ -27,6 +34,15 @@ class CommandHandler {
     if (!event || (event.type !== 'message' && event.type !== 'message_reply') || !event.body) {
       logger.error('Invalid event object in handleCommand');
       return;
+    }
+
+    if (this.db) {
+      const usersCollection = this.db.collection('users');
+      const user = await usersCollection.findOne({ userId: event.senderID });
+      if (user && user.ban) {
+        this.api.sendMessage('You are banned from using this bot.', event.threadID);
+        return;
+      }
     }
 
     const prefix = config.bot.prefix;
@@ -74,7 +90,7 @@ class CommandHandler {
     }
 
     try {
-      await command.execute({ api: this.api, event, args });
+      await command.execute({ api: this.api, event, args, commandHandler: this });
       this.cooldowns.set(cooldownKey, now + cooldownTime);
     } catch (err) {
       logger.error(`Command ${command.name} failed: ${err.message}`);

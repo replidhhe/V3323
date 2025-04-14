@@ -1,11 +1,19 @@
 const logger = require('../logger');
 const config = require('../../config/config.json');
 const language = require(`../../languages/${config.language}.json`);
+const { connect } = require('../../includes/database');
+const { updateUserMessageCount } = require('../../includes/database/user');
 
 class EventHandler {
   constructor(api, commandHandler) {
     this.api = api;
     this.commandHandler = commandHandler;
+    this.db = null;
+    this.initDb();
+  }
+
+  async initDb() {
+    this.db = await connect();
   }
 
   async handleEvent(event) {
@@ -30,6 +38,10 @@ class EventHandler {
           .replace('{body}', event.body || '(no text)');
         logger.info(logMessage);
       });
+
+      if (this.db) {
+        await updateUserMessageCount(this.db, event.senderID, event.threadID);
+      }
 
       if (event.body && event.body.toLowerCase() === 'ping') {
         const response = `${config.bot.botName}: ${language.pingResponse}`;
