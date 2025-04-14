@@ -46,11 +46,14 @@ class CommandHandler {
     }
 
     const prefix = config.bot.prefix;
-    const bodyLower = event.body.toLowerCase();
+    const bodyLower = event.body.toLowerCase().trim();
     let commandName;
     let args;
 
-    if (bodyLower.startsWith(prefix)) {
+    if (bodyLower === prefix.toLowerCase()) {
+      commandName = "prefix";
+      args = [];
+    } else if (bodyLower.startsWith(prefix.toLowerCase())) {
       const parts = event.body.slice(prefix.length).trim().split(' ');
       commandName = parts[0].toLowerCase();
       args = parts.slice(1);
@@ -63,7 +66,8 @@ class CommandHandler {
     const command = this.commands.get(commandName);
     if (!command) return;
 
-    if (command.usePrefix && !event.body.startsWith(prefix)) return;
+   
+    if (command.usePrefix && !event.body.toLowerCase().startsWith(prefix.toLowerCase())) return;
 
     if (command.adminOnly) {
       const adminUids = config.bot.adminUids;
