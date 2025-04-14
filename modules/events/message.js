@@ -34,6 +34,8 @@ class MessageEvent {
         return;
       }
 
+      logger.verbose(`Received event: ${JSON.stringify(event, null, 2)}`);
+
       await this.eventHandler.handleEvent(event);
     });
   }

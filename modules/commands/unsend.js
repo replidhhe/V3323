@@ -1,80 +1,36 @@
 const config = require('../../config/config.json');
-const logger = require('../../includes/logger');
 
 module.exports = {
-  name: "unsend",
-  version: "1.0.4",
-  author: "Hridoy",
-  description: "Deletes a bot message when replied to with this command.",
-  adminOnly: false,
-  commandCategory: "utility",
-  guide: "Reply to a bot message with !unsend to delete it.",
-  cooldowns: 5,
-  usePrefix: true,
+    name: "unsend",
+    version: "1.1.0",
+    author: "Hridoy",
+    description: "Unsends a bot message when replied to.",
+    adminOnly: false,
+    commandCategory: "utility",
+    guide: "Use .unsend while replying to a bot message to delete it.",
+    cooldowns: 5,
+    usePrefix: true,
 
-  async execute({ api, event, args }) {
-    try {
-     
-      const botID = api.getCurrentUserID();
-      const prefix = config.bot.prefix || "!"; // Use default "!" if prefix is not defined
-
-      
-      logger.verbose(`Event Data: ${JSON.stringify(event, null, 2)}`);
-
-      
-      if (!event.messageReply || !event.messageReply.messageID) {
-        logger.warn("No reply detected or missing messageID in event.messageReply.");
-        return api.sendMessage(
-          `Please reply to a bot message with ${prefix}unsend to delete it.`,
-          event.threadID,
-          event.messageID
-        );
-      }
-
-    
-      const repliedMessage = event.messageReply;
-      logger.verbose(`Replied Message Data: ${JSON.stringify(repliedMessage, null, 2)}`);
-
-    
-      if (repliedMessage.senderID !== botID) {
-        logger.info(
-          `Replied message senderID (${repliedMessage.senderID}) does not match botID (${botID}).`
-        );
-        return api.sendMessage(
-          `You can only unsend messages sent by ${config.bot.botName || "this bot"}.`,
-          event.threadID,
-          event.messageID
-        );
-      }
-
-    
-      const messageIDToUnsend = repliedMessage.messageID;
-      logger.info(`Attempting to unsend message with ID: ${messageIDToUnsend}`);
-
-      api.unsendMessage(messageIDToUnsend, (err) => {
-        if (err) {
-          logger.error(`Failed to unsend message: ${err.message}`);
-          return api.sendMessage(
-            `An error occurred while trying to unsend the message: ${err.message}`,
-            event.threadID,
-            event.messageID
-          );
+    async execute({ api, event }) {
+        if (!event || !event.threadID || !event.messageID) {
+            console.error("Invalid event object in unsend command");
+            return api.sendMessage(`${config.bot.botName}: ❌ Invalid event data.`, event.threadID);
         }
- 
-              logger.info("Message unsent successfully.");
-        api.sendMessage(
-          "The message has been successfully unsent.",
-              event.threadID,
-          event.messageID
-        );
-      });
-    } catch (err) {
-      logger.error(`Unexpected error in unsend command: ${err.message}`);
-                api.sendMessage(
-                  `An unexpected error occurred: ${err.message}`,
-        event.threadID,
-           event.messageID
-      );
+
+        if (event.type !== "message_reply") {
+            return api.sendMessage(`${config.bot.botName}: ⚠️ Please reply to a bot message to unsend it.`, event.threadID, event.messageID);
+        }
+
+        if (!event.messageReply || event.messageReply.senderID !== api.getCurrentUserID()) {
+            return api.sendMessage(`${config.bot.botName}: ⚠️ You can only unsend bot messages!`, event.threadID, event.messageID);
+        }
+
+        try {
+            await api.unsendMessage(event.messageReply.messageID);
+            console.log(`✅ Message unsent: ${event.messageReply.messageID}`);
+        } catch (error) {
+            console.error("❌ Error unsending message:", error);
+            api.sendMessage(`${config.bot.botName}: ❌ Failed to unsend the message.`, event.threadID, event.messageID);
+        }
     }
-  },
 };

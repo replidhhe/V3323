@@ -9,8 +9,14 @@ class EventHandler {
   }
 
   async handleEvent(event) {
+    if (!event) {
+      logger.error('Received undefined event in eventHandler');
+      return;
+    }
 
-    if (event.type === 'message') {
+    logger.verbose(`Event received in eventHandler: ${JSON.stringify(event, null, 2)}`);
+
+    if (event.type === 'message' || event.type === 'message_reply') {
       const isGroup = event.isGroup ? 'Group' : 'Inbox';
       this.api.getUserInfo(event.senderID, (err, userInfo) => {
         if (err) {

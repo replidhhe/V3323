@@ -24,17 +24,30 @@ class CommandHandler {
   }
 
   async handleCommand(event) {
-    if (event.type !== 'message' || !event.body) return;
+    if (!event || (event.type !== 'message' && event.type !== 'message_reply') || !event.body) {
+      logger.error('Invalid event object in handleCommand');
+      return;
+    }
 
     const prefix = config.bot.prefix;
-    const usePrefix = event.body.startsWith(prefix);
-    const args = event.body.split(' ').slice(1);
-    const commandName = usePrefix ? event.body.slice(prefix.length).split(' ')[0].toLowerCase() : event.body.toLowerCase();
+    const bodyLower = event.body.toLowerCase();
+    let commandName;
+    let args;
+
+    if (bodyLower.startsWith(prefix)) {
+      const parts = event.body.slice(prefix.length).trim().split(' ');
+      commandName = parts[0].toLowerCase();
+      args = parts.slice(1);
+    } else {
+      const parts = event.body.trim().split(' ');
+      commandName = parts[0].toLowerCase();
+      args = parts.slice(1);
+    }
 
     const command = this.commands.get(commandName);
     if (!command) return;
 
-    if (command.usePrefix && !usePrefix) return;
+    if (command.usePrefix && !event.body.startsWith(prefix)) return;
 
     if (command.adminOnly) {
       const adminUids = config.bot.adminUids;
