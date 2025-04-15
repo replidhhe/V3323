@@ -35,6 +35,7 @@
     "express": "^5.1.0",
     "fs-extra": "^11.3.0",
     "gradient-string": "^2.0.2",
+    "he": "^1.2.0",
     "mongodb": "^6.15.0",
     "priyanshu-fca": "^3.0.0"
   }
