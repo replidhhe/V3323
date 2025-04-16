@@ -7,20 +7,20 @@ const crypto = require('crypto');
 
 // ====== CONFIG ZONE ======
 const FB_COVER_API_URL = 'https://nexalo-api.vercel.app/api/fb-cover';
-const ACCESS_TOKEN = '6628568379|c1e620fa708a1d5696fb991c1bde5662'; 
+const ACCESS_TOKEN = '6628568379|c1e620fa708a1d5696fb991c1bde5662';
 // ==========================
 
 module.exports = {
     name: "cover1",
-    version: "1.0.1",
+    version: "1.0.2",
     author: "Hridoy",
-    description: "Generate a Facebook cover image with your name and profile picture 🎨",
+    description: "Generate a Facebook cover image with your text and profile picture 🎨",
     adminOnly: false,
     commandCategory: "Fun",
-    guide: "Use {pn}cover1 <FirstName> <LastName> to create a cover with your profile picture.\n" +
-           "Or use {pn}cover1 @username <FirstName> <LastName> to use the mentioned user's profile picture.\n" +
-           "Example: {pn}cover1 John Doe\n" +
-           "Example: {pn}cover1 @username John Doe",
+    guide: "Use {pn}cover1 Text1 | Text2 to create a cover with your profile picture.\n" +
+           "Or use {pn}cover1 @username | Text1 | Text2 to use the mentioned user's profile picture.\n" +
+           "Example: {pn}cover1 John | Doe\n" +
+           "Example: {pn}cover1 @username | John | Doe",
     cooldowns: 5,
     usePrefix: true,
 
@@ -35,9 +35,10 @@ module.exports = {
                 return api.sendMessage(`${config.bot.botName}: ❌ Invalid event data.`, threadID);
             }
 
-            if (args.length < 2) {
+            const input = args.join(" ").split("|").map(item => item.trim());
+            if (input.length < 2 || input.length > 3) {
                 return api.sendMessage(
-                    `${config.bot.botName}: Please provide a first name and last name. Example: {pn}cover1 John Doe`,
+                    `${config.bot.botName}: Please provide input in the format: {pn}cover1 Text1 | Text2 or {pn}cover1 @username | Text1 | Text2`,
                     threadID,
                     messageID
                 );
@@ -46,31 +47,28 @@ module.exports = {
             let imageUserID = event.senderID;
             let firstName, lastName;
 
-            if (args[0].startsWith('@')) {
-                if (args.length < 3) {
-                    return api.sendMessage(
-                        `${config.bot.botName}: Please provide a first name and last name after the mention. Example: {pn}cover1 @username John Doe`,
-                        threadID,
-                        messageID
-                    );
-                }
-
+            if (input.length === 3 && input[0].startsWith('@')) {
                 const mention = event.mentions;
                 if (!mention || Object.keys(mention).length === 0) {
                     throw new Error("No user mentioned or mention format is incorrect");
                 }
-
                 imageUserID = Object.keys(mention)[0];
-                firstName = args[1];
-                lastName = args.slice(2).join(" ");
+                firstName = input[1];
+                lastName = input[2];
+            } else if (input.length === 2) {
+                firstName = input[0];
+                lastName = input[1];
             } else {
-                firstName = args[0];
-                lastName = args.slice(1).join(" ");
+                return api.sendMessage(
+                    `${config.bot.botName}: Please provide input in the format: {pn}cover1 Text1 | Text2 or {pn}cover1 @username | Text1 | Text2`,
+                    threadID,
+                    messageID
+                );
             }
 
             if (!firstName || !lastName) {
                 return api.sendMessage(
-                    `${config.bot.botName}: Please provide both a first name and last name. Example: {pn}cover1 John Doe`,
+                    `${config.bot.botName}: Please provide both Text1 and Text2. Example: {pn}cover1 John | Doe`,
                     threadID,
                     messageID
                 );
@@ -97,7 +95,7 @@ module.exports = {
             });
 
             const msg = {
-                body: `${config.bot.botName}: 🎨 Here's your Facebook cover for "${firstName} ${lastName}"!`,
+                body: `${config.bot.botName}: 🎨 Here's your Facebook cover for "${firstName} | ${lastName}"!`,
                 attachment: fs.createReadStream(filePath)
             };
 
