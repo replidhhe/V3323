@@ -11,7 +11,11 @@ A fun and engaging messenger bot for SimSim talk and entertainment, built with N
 
   
 
-![Node.js](https://img.shields.io/badge/Node.js-Supported-brightgreen) ![Size](https://img.shields.io/badge/Size-14.3_MB-blue) ![Code Version](https://img.shields.io/badge/Code_Version-1.5.35-yellow) ![Visitors](https://img.shields.io/badge/Visitors-391-orange) ![License](https://img.shields.io/badge/License-MIT-green)
+![Node.js](https://img.shields.io/badge/Node.js-Supported-brightgreen)
+![Repo Size](https://img.shields.io/github/repo-size/1dev-hridoy/NexaSim-v2)
+![Code Version](https://img.shields.io/badge/Code_Version-1.0.0-yellow)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 
   
 
