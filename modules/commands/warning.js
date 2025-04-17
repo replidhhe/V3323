@@ -8,7 +8,7 @@ module.exports = {
     author: "Hridoy",
     description: "Manages user warnings in a thread. Admins can add or remove warnings, and users are banned after 5 warnings.",
     adminOnly: false, 
-    commandCategory: "moderation",
+    commandCategory: "admin",
     guide: "Use {pn}warning @username to add a warning (admin only)\n{pn}warning remove @username to remove a warning (admin only)\n{pn}warning list to view the warning list",
     cooldowns: 5,
     usePrefix: true,
