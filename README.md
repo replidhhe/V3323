@@ -11,7 +11,7 @@ A fun and engaging messenger bot for SimSim talk and entertainment, built with N
 
   
 
-![Node.js](https://img.shields.io/badge/Node.js-Supported-brightgreen) ![Size](https://img.shields.io/badge/Size-14.3_MB-blue) ![Code Version](https://img.shields.io/badge/Code_Version-1.5.35-yellow) ![Visitors](https://img.shields.io/badge/Visitors-517489-orange) ![License](https://img.shields.io/badge/License-MIT-green)
+![Node.js](https://img.shields.io/badge/Node.js-Supported-brightgreen) ![Size](https://img.shields.io/badge/Size-14.3_MB-blue) ![Code Version](https://img.shields.io/badge/Code_Version-1.5.35-yellow) ![Visitors](https://img.shields.io/badge/Visitors-391-orange) ![License](https://img.shields.io/badge/License-MIT-green)
 
   
 
