@@ -4,218 +4,916 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexaSim V2 Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'discord-dark': '#1e1f29',
+                        'discord-darker': '#18191f',
+                        'discord-sidebar': '#141419',
+                        'discord-blue': '#3ba6ff',
+                        'discord-card': '#24252f',
+                        'discord-green': '#43b581',
+                        'discord-yellow': '#faa61a',
+                        'discord-red': '#f04747',
+                        'console-bg': '#0f0f14',
+                        'console-text': '#a9b7c6',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="text-white">
-    <div class="container mx-auto p-6">
-        <h1 class="text-4xl font-bold text-center mb-6 text-indigo-400 glow-text">NexaSim V2 Admin Dashboard</h1>
-        <div class="text-center mb-8 bg-gray-800 bg-opacity-50 p-4 rounded-lg shadow-lg">
-            <p class="text-lg">Bot Uptime: <span id="bot-uptime" class="font-semibold text-green-400">Loading...</span></p>
+<body class="bg-discord-dark text-gray-300 min-h-screen overflow-x-hidden">
+    <!-- Preloader -->
+    <div id="preloader" class="preloader hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed h-full bg-discord-sidebar text-gray-400 flex flex-col z-40 transition-all duration-300 w-14 md:w-56">
+        <div class="md:hidden flex justify-center items-center h-14 border-b border-gray-800">
+            <button id="mobile-menu-button" class="text-discord-blue p-2 rounded-md">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-
-        <div id="user-list" class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"></div>
-
-        <div class="flex justify-center mt-8 space-x-4">
-            <button id="prev-page" class="pagination-btn bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg disabled:bg-gray-600 font-medium" disabled>Previous</button>
-            <span id="page-info" class="text-lg font-semibold flex items-center px-4 bg-gray-800 bg-opacity-50 rounded-lg">Page 1</span>
-            <button id="next-page" class="pagination-btn bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg disabled:bg-gray-600 font-medium">Next</button>
+        
+        <div class="hidden md:flex items-center justify-start p-4 mb-4">
+            <i class="fas fa-robot text-discord-blue text-2xl mr-3"></i>
+            <span class="font-bold text-white text-lg">NexaSim V2</span>
+        </div>
+        
+        <div class="flex md:hidden items-center justify-center py-4">
+            <i class="fas fa-robot text-discord-blue text-xl"></i>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto">
+            <ul class="space-y-6 md:space-y-4 px-0 md:px-4 mt-4">
+                <li>
+                    <a href="#" data-section="dashboard" class="sidebar-icon flex items-center justify-center md:justify-start py-2 text-discord-blue">
+                        <i class="fas fa-home text-lg md:w-6 md:text-base"></i>
+                        <span class="hidden md:inline ml-3">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="threads" class="sidebar-icon flex items-center justify-center md:justify-start py-2">
+                        <i class="fa-solid fa-box text-lg md:w-6 md:text-base"></i>
+                        <span class="hidden md:inline ml-3">Threads/Group</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="users" class="sidebar-icon flex items-center justify-center md:justify-start py-2">
+                        <i class="fas fa-user text-lg md:w-6 md:text-base"></i>
+                        <span class="hidden md:inline ml-3">Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="settings" class="sidebar-icon flex items-center justify-center md:justify-start py-2">
+                        <i class="fas fa-cog text-lg md:w-6 md:text-base"></i>
+                        <span class="hidden md:inline ml-3">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="mt-auto pt-4 border-t border-gray-800 hidden md:block">
+            <p class="text-xs text-center px-4 pb-4">Bot Version: 1.0.0</p>
         </div>
     </div>
 
-    <!-- Modal for updating balance -->
-    <div id="balance-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h2 class="text-2xl font-bold mb-6 text-indigo-300">Update Balance for <span id="modal-username"></span></h2>
-            <input id="modal-balance" type="number" placeholder="New Balance" class="w-full p-3 rounded-lg input-field text-white mb-6">
-            <button onclick="updateBalance()" class="w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg btn font-medium">Update Balance</button>
-        </div>
-    </div>
+    <!-- Main Content -->
+    <div id="content" class="ml-14 md:ml-56 p-4 md:p-6 transition-all duration-300">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-6 md:mb-8 text-center md:text-left">
+                <h1 class="text-xl md:text-2xl font-bold text-white">Welcome, Hridoy</h1>
+                <p class="text-sm md:text-base text-gray-400">Here's what's happening with <span class="text-discord-blue">NexaSim V2</span> today.</p>
+            </div>
 
-    <!-- New Modal for ban confirmation -->
-    <div id="ban-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeBanModal()">&times;</span>
-            <h2 class="text-2xl font-bold mb-4 text-red-400">Confirm Action</h2>
-            <p class="mb-6">Are you sure you want to <span id="ban-action-text">ban</span> user <span id="ban-username" class="font-semibold"></span>?</p>
-            <div class="flex space-x-4">
-                <button onclick="closeBanModal()" class="flex-1 bg-gray-600 hover:bg-gray-700 p-3 rounded-lg btn font-medium">Cancel</button>
-                <button id="confirm-ban-btn" class="flex-1 bg-red-600 hover:bg-red-700 p-3 rounded-lg btn font-medium">Confirm</button>
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="section bg-discord-card rounded-lg p-4 md:p-6">
+                <!-- Refresh and Restart Buttons -->
+                <div class="mb-6 flex justify-center md:justify-start space-x-4">
+                    <button id="refresh-data" class="bg-discord-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors flex items-center text-sm md:text-base">
+                        <i class="fas fa-sync-alt mr-2"></i> Refresh Data
+                    </button>
+                    <button id="restart-bot" class="bg-discord-red hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors flex items-center text-sm md:text-base">
+                        <i class="fas fa-power-off mr-2"></i> Restart
+                    </button>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 md:gap-4 mb-6 md:mb-8">
+                    <!-- Thread Count -->
+                    <div class="stat-card bg-discord-card rounded-lg p-3 md:p-4 flex flex-col items-center justify-center">
+                        <p class="text-xs md:text-sm text-gray-400 mb-1 md:mb-2 text-center">Thread Count</p>
+                        <div class="flex items-center">
+                            <i class="fas fa-server text-gray-400 mr-2"></i>
+                            <span id="thread-count" class="text-white text-xl md:text-2xl font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- User Count -->
+                    <div class="stat-card bg-discord-card rounded-lg p-3 md:p-4 flex flex-col items-center justify-center">
+                        <p class="text-xs md:text-sm text-gray-400 mb-1 md:mb-2 text-center">User Count</p>
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-gray-400 mr-2"></i>
+                            <span id="user-count" class="text-white text-xl md:text-2xl font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- API Latency -->
+                    <div class="stat-card bg-discord-card rounded-lg p-3 md:p-4 flex flex-col items-center justify-center">
+                        <p class="text-xs md:text-sm text-gray-400 mb-1 md:mb-2 text-center">API Latency</p>
+                        <div class="flex items-center">
+                            <i class="fas fa-bolt text-gray-400 mr-2"></i>
+                            <span class="text-white text-xl md:text-2xl font-bold">N/A</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Prefix -->
+                    <div class="stat-card bg-discord-card rounded-lg p-3 md:p-4 flex flex-col items-center justify-center">
+                        <p class="text-xs md:text-sm text-gray-400 mb-1 md:mb-2 text-center">Prefix</p>
+                        <div class="flex items-center">
+                            <i class="fas fa-terminal text-gray-400 mr-2"></i>
+                            <span id="prefix" class="text-white text-xl md:text-2xl font-bold">-</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Uptime -->
+                    <div class="stat-card bg-discord-card rounded-lg p-3 md:p-4 flex flex-col items-center justify-center">
+                        <div class="uptime-badge bg-discord-green text-white text-xs px-2 py-1 rounded-full mb-1">
+                            <i class="fas fa-circle text-xs mr-1"></i> Uptime
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-gray-400 mr-2"></i>
+                            <span id="uptime-text" class="uptime-value text-white text-lg md:text-xl font-bold">0d 0h 0m 0s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Content -->
+                <div class="mt-4 md:mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <!-- Bot Console -->
+                    <div class="bg-discord-darker rounded-lg p-3 md:p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm md:text-base text-white font-medium">Bot Console</h3>
+                            <div class="flex space-x-2">
+                                <button id="clear-console" class="text-xs bg-discord-dark hover:bg-opacity-80 px-2 py-1 rounded text-gray-300">
+                                    Clear
+                                </button>
+                                <button id="auto-scroll" class="text-xs bg-discord-blue hover:bg-opacity-80 px-2 py-1 rounded text-white">
+                                    Auto-scroll
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Console output -->
+                        <div id="console" class="console rounded-md p-2 text-xs md:text-sm">
+                            <div class="console-line p-1 log-info cursor">
+                                <span class="text-gray-500">[Loading...]</span> Waiting for logs...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bot Status -->
+                    <div class="bg-discord-darker rounded-lg p-3 md:p-4">
+                        <h3 class="text-sm md:text-base text-white font-medium mb-2 text-center md:text-left">Bot Status</h3>
+                        <div class="space-y-3 md:space-y-4">
+                            <div class="flex flex-col md:flex-row md:items-center">
+                                <div class="w-full md:w-2/5 text-xs md:text-sm text-gray-400 mb-1 md:mb-0 text-center md:text-left">Memory Usage:</div>
+                                <div class="w-full md:w-3/5">
+                                    <div class="w-full bg-discord-dark rounded-full h-2 md:h-2.5">
+                                        <div id="memory-usage-bar" class="bg-discord-blue h-2 md:h-2.5 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                    <div id="memory-usage-text" class="text-xs text-right mt-1">0%</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col md:flex-row md:items-center">
+                                <div class="w-full md:w-2/5 text-xs md:text-sm text-gray-400 mb-1 md:mb-0 text-center md:text-left">CPU Usage:</div>
+                                <div class="w-full md:w-3/5">
+                                    <div class="w-full bg-discord-dark rounded-full h-2 md:h-2.5">
+                                        <div id="cpu-usage-bar" class="bg-discord-blue h-2 md:h-2.5 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                    <div id="cpu-usage-text" class="text-xs text-right mt-1">0%</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col md:flex-row md:items-center">
+                                <div class="w-full md:w-2/5 text-xs md:text-sm text-gray-400 mb-1 md:mb-0 text-center md:text-left">Network:</div>
+                                <div class="w-full md:w-3/5">
+                                    <div class="w-full bg-discord-dark rounded-full h-2 md:h-2.5">
+                                        <div id="network-usage-bar" class="bg-discord-blue h-2 md:h-2.5 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                    <div id="network-usage-text" class="text-xs text-right mt-1">0%</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col md:flex-row md:items-center">
+                                <div class="w-full md:w-2/5 text-xs md:text-sm text-gray-400 mb-1 md:mb-0 text-center md:text-left">Disk:</div>
+                                <div class="w-full md:w-3/5">
+                                    <div class="w-full bg-discord-dark rounded-full h-2 md:h-2.5">
+                                        <div id="disk-usage-bar" class="bg-discord-blue h-2 md:h-2.5 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                    <div id="disk-usage-text" class="text-xs text-right mt-1">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threads/Group Section -->
+            <div id="threads-section" class="section bg-discord-card rounded-lg p-4 md:p-6 hidden">
+                <h2 class="text-lg md:text-xl font-bold text-white mb-3 md:mb-4 text-center md:text-left">Threads/Group</h2>
+                <div id="threads-list" class="space-y-4">
+                    <!-- Threads will be populated dynamically -->
+                </div>
+                <div class="flex justify-between items-center mt-4">
+                    <button id="threads-prev" class="bg-discord-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <span id="threads-page-info" class="text-gray-400">Page 1 of 1</span>
+                    <button id="threads-next" class="bg-discord-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="section bg-discord-card rounded-lg p-4 md:p-6 hidden">
+                <h2 class="text-lg md:text-xl font-bold text-white mb-3 md:mb-4 text-center md:text-left">Users</h2>
+                <div id="users-list" class="space-y-4">
+                    <!-- Users will be populated dynamically -->
+                </div>
+                <div class="flex justify-between items-center mt-4">
+                    <button id="users-prev" class="bg-discord-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <span id="users-page-info" class="text-gray-400">Page 1 of 1</span>
+                    <button id="users-next" class="bg-discord-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings-section" class="section bg-discord-card rounded-lg p-4 md:p-6 hidden">
+                <h2 class="text-lg md:text-xl font-bold text-white mb-3 md:mb-4 text-center md:text-left">Settings</h2>
+                <form id="config-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Prefix</label>
+                        <input id="prefix-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Listen Events</label>
+                        <input id="listenEvents-input" type="checkbox" class="mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Self Listen</label>
+                        <input id="selfListen-input" type="checkbox" class="mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Force Login</label>
+                        <input id="forceLogin-input" type="checkbox" class="mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Bot Name</label>
+                        <input id="botName-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Owner Name</label>
+                        <input id="ownerName-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Owner UID</label>
+                        <input id="ownerUid-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Admin UIDs (comma-separated)</label>
+                        <input id="adminUids-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Login Username</label>
+                        <input id="loginUsername-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Login Password</label>
+                        <input id="loginPassword-input" type="password" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Logging Level</label>
+                        <select id="loggingLevel-input" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                            <option value="warn">Warn</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Max Retries</label>
+                        <input id="maxRetries-input" type="number" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Retry Delay (ms)</label>
+                        <input id="retryDelay-input" type="number" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Language</label>
+                        <input id="language-input" type="text" class="w-full bg-discord-darker text-white rounded-md p-2 mt-1">
+                    </div>
+                    <button type="submit" class="bg-discord-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
+                        Save Changes
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        let currentPage = 1;
-        const usersPerPage = 6;
-        let allUsers = [];
-        let botStartTime = null;
-        let banUserId = null;
-        let banCurrentStatus = false;
-
-       
-        function formatUptime(seconds) {
-            const days = Math.floor(seconds / (24 * 3600));
-            seconds %= (24 * 3600);
-            const hours = Math.floor(seconds / 3600);
-            seconds %= 3600;
-            const minutes = Math.floor(seconds / 60);
-            seconds = Math.floor(seconds % 60);
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        // Preloader control
+        function showPreloader() {
+            document.getElementById('preloader').classList.remove('hidden');
         }
 
-  
-        function updateBotUptime() {
-            if (!botStartTime) return;
-            const now = new Date();
-            const start = new Date(botStartTime);
-            const diff = (now - start) / 1000; 
-            document.getElementById('bot-uptime').textContent = formatUptime(diff);
+        function hidePreloader() {
+            document.getElementById('preloader').classList.add('hidden');
         }
 
-   
-        async function fetchBotStartTime() {
+        // Restart bot function
+        async function restartBot() {
+            const restartButton = document.getElementById('restart-bot');
+            restartButton.disabled = true;
+            restartButton.innerHTML = '<i class="fas fa-power-off mr-2"></i> Restarting...';
+            showPreloader();
+
             try {
-                const response = await axios.get('/api/bot-uptime');
-                botStartTime = response.data.startTime;
-                updateBotUptime();
-                setInterval(updateBotUptime, 1000); 
+                const response = await fetch('/api/restart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                console.log('Restart response:', result); // Log the response for debugging
+                if (result.success) {
+                    alert('Bot restarted successfully');
+                    fetchStats(); // Refresh stats after restart
+                } else {
+                    alert('Failed to restart bot: ' + result.message);
+                }
             } catch (error) {
-                console.error('Error fetching bot start time:', error);
-                document.getElementById('bot-uptime').textContent = 'Error';
+                console.error('Error restarting bot:', error);
+                alert('Failed to restart bot: Network error');
+            } finally {
+                restartButton.disabled = false;
+                restartButton.innerHTML = '<i class="fas fa-power-off mr-2"></i> Restart';
+                hidePreloader();
             }
         }
 
-     
-        async function fetchUsers(page = 1) {
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
+        
+        let sidebarExpanded = false;
+        
+        mobileMenuButton.addEventListener('click', () => {
+            sidebarExpanded = !sidebarExpanded;
+            
+            if (sidebarExpanded) {
+                sidebar.classList.remove('w-14');
+                sidebar.classList.add('w-56');
+                
+                const textLabels = document.querySelectorAll('.sidebar-icon span');
+                textLabels.forEach(label => {
+                    label.classList.remove('hidden');
+                    label.classList.add('inline');
+                });
+                
+                const icons = document.querySelectorAll('.sidebar-icon i');
+                icons.forEach(icon => {
+                    icon.classList.add('w-6');
+                    icon.classList.remove('text-lg');
+                    icon.classList.add('text-base');
+                });
+                
+                mobileMenuButton.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                sidebar.classList.add('w-14');
+                sidebar.classList.remove('w-56');
+                
+                const textLabels = document.querySelectorAll('.sidebar-icon span');
+                textLabels.forEach(label => {
+                    label.classList.add('hidden');
+                    label.classList.remove('inline');
+                });
+                
+                const icons = document.querySelectorAll('.sidebar-icon i');
+                icons.forEach(icon => {
+                    icon.classList.remove('w-6');
+                    icon.classList.add('text-lg');
+                    icon.classList.remove('text-base');
+                });
+                
+                mobileMenuButton.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+
+        // Section navigation
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.sidebar-icon');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.getAttribute('data-section') + '-section';
+                sections.forEach(section => section.classList.add('hidden'));
+                document.getElementById(sectionId).classList.remove('hidden');
+                navLinks.forEach(l => l.classList.remove('text-discord-blue'));
+                link.classList.add('text-discord-blue');
+            });
+        });
+
+        // Fetch and update bot stats
+        async function fetchStats() {
             try {
-                const response = await axios.get('/api/users');
-                allUsers = response.data;
-                const startIndex = (page - 1) * usersPerPage;
-                const endIndex = startIndex + usersPerPage;
-                const paginatedUsers = allUsers.slice(startIndex, endIndex);
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
 
-                const userList = document.getElementById('user-list');
-                userList.innerHTML = '';
+                document.getElementById('thread-count').textContent = stats.threadCount;
+                document.getElementById('user-count').textContent = stats.userCount;
+                document.getElementById('prefix').textContent = stats.prefix;
+                document.getElementById('uptime-text').textContent = stats.uptime;
 
-                paginatedUsers.forEach(user => {
-                    const userCard = document.createElement('div');
-                    userCard.className = 'card p-5 rounded-lg cursor-pointer';
-                    userCard.innerHTML = `
-                        <h2 class="text-xl font-semibold text-indigo-300 mb-3">${user.name} <span class="text-sm text-gray-400">(ID: ${user.userId})</span></h2>
-                        <div class="space-y-2">
-                            <p class="flex justify-between"><span>Balance:</span> <span class="stat-value text-green-400">${user.balance || 0}</span></p>
-                            <p class="flex justify-between"><span>Rank:</span> <span class="stat-value text-blue-400">${user.rank || 'N/A'}</span></p>
-                            <p class="flex justify-between"><span>XP:</span> <span class="stat-value text-yellow-400">${user.xp || 0}</span></p>
+                document.getElementById('memory-usage-bar').style.width = `${stats.serverStats.memory}%`;
+                document.getElementById('memory-usage-text').textContent = `${stats.serverStats.memory}%`;
+                document.getElementById('cpu-usage-bar').style.width = `${stats.serverStats.cpu}%`;
+                document.getElementById('cpu-usage-text').textContent = `${stats.serverStats.cpu}%`;
+                document.getElementById('network-usage-bar').style.width = `${stats.serverStats.network}%`;
+                document.getElementById('network-usage-text').textContent = `${stats.serverStats.network}%`;
+                document.getElementById('disk-usage-bar').style.width = `${stats.serverStats.disk}%`;
+                document.getElementById('disk-usage-text').textContent = `${stats.serverStats.disk}%`;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Refresh stats periodically
+        fetchStats();
+        setInterval(fetchStats, 5000);
+
+        // Live console logs using Server-Sent Events
+        const consoleElement = document.getElementById('console');
+        const clearConsoleButton = document.getElementById('clear-console');
+        const autoScrollButton = document.getElementById('auto-scroll');
+        let autoScrollEnabled = true;
+
+        function addLogEntry(log) {
+            const lastLine = consoleElement.querySelector('.cursor');
+            if (lastLine) {
+                lastLine.classList.remove('cursor');
+            }
+
+            const logLine = document.createElement('div');
+            logLine.className = `console-line p-1 log-${log.level} cursor`;
+            logLine.innerHTML = `<span class="text-gray-500">[${log.timestamp}]</span> ${log.message}`;
+
+            consoleElement.appendChild(logLine);
+
+            if (autoScrollEnabled) {
+                consoleElement.scrollTop = consoleElement.scrollHeight;
+            }
+
+            const lines = consoleElement.querySelectorAll('.console-line');
+            if (lines.length > 100) {
+                consoleElement.removeChild(lines[0]);
+            }
+        }
+
+        const eventSource = new EventSource('/api/logs');
+        eventSource.onmessage = (event) => {
+            const log = JSON.parse(event.data);
+            addLogEntry(log);
+        };
+
+        eventSource.onerror = () => {
+            addLogEntry({ level: 'error', message: 'Lost connection to log stream', timestamp: new Date().toISOString() });
+            eventSource.close();
+        };
+
+        clearConsoleButton.addEventListener('click', () => {
+            const lines = consoleElement.querySelectorAll('.console-line');
+            for (let i = 0; i < lines.length - 1; i++) {
+                consoleElement.removeChild(lines[i]);
+            }
+        });
+
+        autoScrollButton.addEventListener('click', () => {
+            autoScrollEnabled = !autoScrollEnabled;
+            autoScrollButton.classList.toggle('bg-discord-blue', autoScrollEnabled);
+            autoScrollButton.classList.toggle('bg-discord-dark', !autoScrollEnabled);
+        });
+
+        document.getElementById('refresh-data').addEventListener('click', fetchStats);
+        document.getElementById('restart-bot').addEventListener('click', restartBot);
+
+        // Threads/Group Section with Pagination
+        let threadsCurrentPage = 1;
+        const threadsLimit = 10;
+
+        async function fetchThreads(page = 1) {
+            try {
+                const response = await fetch(`/api/threads?page=${page}&limit=${threadsLimit}`);
+                const data = await response.json();
+                if (!data.threads) {
+                    throw new Error('No threads found in response');
+                }
+                const threads = data.threads;
+                const threadsList = document.getElementById('threads-list');
+                threadsList.innerHTML = '';
+
+                threads.forEach(thread => {
+                    const threadDiv = document.createElement('div');
+                    threadDiv.className = 'bg-discord-darker rounded-lg p-3';
+                    threadDiv.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="text-white font-medium">${thread.name}</h4>
+                                <p class="text-gray-400 text-sm">ID: ${thread.threadID}</p>
+                                <p class="text-gray-400 text-sm">Participants: ${thread.participantCount}</p>
+                                <p class="text-gray-400 text-sm">Type: ${thread.isGroup ? 'Group' : 'Direct'}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="send-message bg-discord-blue hover:bg-blue-600 text-white px-2 py-1 rounded-md text-sm" data-thread-id="${thread.threadID}">Send Message</button>
+                            </div>
                         </div>
-                        <button onclick="openBanModal('${user.userId}', '${user.name}', ${user.ban})" class="mt-4 p-2 w-full rounded-lg btn ${user.ban ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}">
-                            ${user.ban ? 'Unban' : 'Ban'}
-                        </button>
                     `;
-                    userCard.onclick = (e) => {
-                        if (e.target.tagName !== 'BUTTON') {
-                            openModal(user);
-                        }
-                    };
-                    userList.appendChild(userCard);
+                    threadsList.appendChild(threadDiv);
                 });
 
-  
-                currentPage = page;
-                document.getElementById('page-info').textContent = `Page ${currentPage}`;
-                document.getElementById('prev-page').disabled = currentPage === 1;
-                document.getElementById('next-page').disabled = endIndex >= allUsers.length;
+                // Update pagination info
+                threadsCurrentPage = data.currentPage;
+                const totalPages = data.totalPages;
+                document.getElementById('threads-page-info').textContent = `Page ${threadsCurrentPage} of ${totalPages}`;
+
+                // Update button states
+                document.getElementById('threads-prev').disabled = threadsCurrentPage === 1;
+                document.getElementById('threads-next').disabled = threadsCurrentPage === totalPages;
+
+                // Add event listeners for send message buttons
+                document.querySelectorAll('.send-message').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const threadID = e.target.getAttribute('data-thread-id');
+                        const message = prompt('Enter the message to send:');
+                        if (message) {
+                            try {
+                                const response = await fetch('/api/send-message', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ threadID, message })
+                                });
+                                const result = await response.json();
+                                console.log('Send message response:', result); // Log the response for debugging
+                                if (result.success) {
+                                    alert('Message sent successfully');
+                                } else {
+                                    alert('Failed to send message: ' + result.message);
+                                }
+                            } catch (error) {
+                                console.error('Error sending message:', error);
+                                alert('Failed to send message: Network error');
+                            }
+                        }
+                    });
+                });
             } catch (error) {
-                console.error('Error fetching users:', error);
-                alert('Failed to fetch users.');
+                console.error('Error fetching threads:', error);
+                alert('Failed to load threads: ' + error.message);
             }
         }
 
-
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (currentPage > 1) {
-                fetchUsers(currentPage - 1);
+        document.getElementById('threads-prev').addEventListener('click', () => {
+            if (threadsCurrentPage > 1) {
+                fetchThreads(threadsCurrentPage - 1);
             }
         });
 
-        document.getElementById('next-page').addEventListener('click', () => {
-            if ((currentPage * usersPerPage) < allUsers.length) {
-                fetchUsers(currentPage + 1);
-            }
+        document.getElementById('threads-next').addEventListener('click', () => {
+            fetchThreads(threadsCurrentPage + 1);
         });
-
-        let selectedUser = null;
-
-        function openModal(user) {
-            selectedUser = user;
-            document.getElementById('modal-username').textContent = user.name;
-            document.getElementById('modal-balance').value = user.balance || 0;
-            document.getElementById('balance-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('balance-modal').style.display = 'none';
-            selectedUser = null;
-        }
-
-     
-        function openBanModal(userId, username, currentBanStatus) {
-            banUserId = userId;
-            banCurrentStatus = currentBanStatus;
-            document.getElementById('ban-username').textContent = username;
-            document.getElementById('ban-action-text').textContent = currentBanStatus ? 'unban' : 'ban';
-            document.getElementById('confirm-ban-btn').className = `flex-1 ${currentBanStatus ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} p-3 rounded-lg btn font-medium`;
-            document.getElementById('ban-modal').style.display = 'flex';
-            
-        
-            document.getElementById('confirm-ban-btn').onclick = () => {
-                toggleBan(banUserId, banCurrentStatus);
-                closeBanModal();
-            };
-        }
-
-        function closeBanModal() {
-            document.getElementById('ban-modal').style.display = 'none';
-            banUserId = null;
-        }
-
-        async function updateBalance() {
-            if (!selectedUser) return;
-            const newBalance = document.getElementById('modal-balance').value;
-            if (!newBalance || isNaN(newBalance)) {
-                alert('Please enter a valid balance.');
-                return;
-            }
-
-            try {
-                await axios.post('/api/update-balance', { userId: selectedUser.userId, balance: parseInt(newBalance) });
-                alert('Balance updated successfully.');
-                closeModal();
-                fetchUsers(currentPage); 
-            } catch (error) {
-                console.error('Error updating balance:', error);
-                alert('Failed to update balance.');
-            }
-        }
-
-
-        async function toggleBan(userId, currentBanStatus) {
-            try {
-                await axios.post('/api/toggle-ban', { userId, ban: !currentBanStatus });
-                alert(`User ${currentBanStatus ? 'unbanned' : 'banned'} successfully.`);
-                fetchUsers(currentPage); 
-            } catch (error) {
-                console.error('Error toggling ban:', error);
-                alert('Failed to toggle ban status.');
-            }
-        }
 
        
-        fetchBotStartTime();
-        fetchUsers();
+        let usersCurrentPage = 1;
+        const usersLimit = 10;
+
+        async function fetchUsers(page = 1) {
+            try {
+                const response = await fetch(`/api/users?page=${page}&limit=${usersLimit}`);
+                const data = await response.json();
+                if (!data.users) {
+                    throw new Error('No users found in response');
+                }
+                const users = data.users;
+                const usersList = document.getElementById('users-list');
+                usersList.innerHTML = '';
+
+                users.forEach(user => {
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'bg-discord-darker rounded-lg p-3';
+                    userDiv.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="text-white font-medium">${user.name}</h4>
+                                <p class="text-gray-400 text-sm">ID: ${user.userId}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <input type="number" value="${user.balance}" class="balance-input w-20 bg-discord-dark text-white rounded-md p-1" data-user-id="${user.userId}">
+                                <button class="update-balance bg-discord-blue hover:bg-blue-600 text-white px-2 py-1 rounded-md text-sm" data-user-id="${user.userId}">Update Balance</button>
+                                <button class="toggle-ban ${user.banned ? 'bg-discord-red' : 'bg-discord-green'} hover:bg-opacity-80 text-white px-2 py-1 rounded-md text-sm" data-user-id="${user.userId}">
+                                    ${user.banned ? 'Unban' : 'Ban'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    usersList.appendChild(userDiv);
+                });
+
+                usersCurrentPage = data.currentPage;
+                const totalPages = data.totalPages;
+                document.getElementById('users-page-info').textContent = `Page ${usersCurrentPage} of ${totalPages}`;
+
+             
+                document.getElementById('users-prev').disabled = usersCurrentPage === 1;
+                document.getElementById('users-next').disabled = usersCurrentPage === totalPages;
+
+             
+                document.querySelectorAll('.update-balance').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const userId = e.target.getAttribute('data-user-id');
+                        const balanceInput = e.target.previousElementSibling;
+                        const balance = balanceInput.value;
+
+                        try {
+                            const response = await fetch('/api/update-balance', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId, balance })
+                            });
+                            const result = await response.json();
+                            console.log('Update balance response:', result);
+                            if (result.success) {
+                                alert('Balance updated successfully');
+                            } else {
+                                alert('Failed to update balance: ' + result.message);
+                            }
+                        } catch (error) {
+                            console.error('Error updating balance:', error);
+                            alert('Failed to update balance: Network error');
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.toggle-ban').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const userId = e.target.getAttribute('data-user-id');
+                        const ban = !e.target.textContent.includes('Ban');
+
+                        try {
+                            const response = await fetch('/api/toggle-ban', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId, ban })
+                            });
+                            const result = await response.json();
+                            console.log('Toggle ban response:', result);
+                            if (result.success) {
+                                e.target.textContent = ban ? 'Unban' : 'Ban';
+                                e.target.classList.toggle('bg-discord-red', ban);
+                                e.target.classList.toggle('bg-discord-green', !ban);
+                                alert(`User ${ban ? 'banned' : 'unbanned'} successfully`);
+                            } else {
+                                alert(`Failed to ${ban ? 'ban' : 'unban'} user: ${result.message}`);
+                            }
+                        } catch (error) {
+                            console.error('Error toggling ban:', error);
+                            alert(`Failed to ${ban ? 'ban' : 'unban'} user: Network error`);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                alert('Failed to load users: ' + error.message);
+            }
+        }
+
+        document.getElementById('users-prev').addEventListener('click', () => {
+            if (usersCurrentPage > 1) {
+                fetchUsers(usersCurrentPage - 1);
+            }
+        });
+
+        document.getElementById('users-next').addEventListener('click', () => {
+            fetchUsers(usersCurrentPage + 1);
+        });
+
+       
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                if (!config.bot) {
+                    throw new Error('Bot configuration not found in response');
+                }
+
+                document.getElementById('prefix-input').value = config.bot.prefix;
+                document.getElementById('listenEvents-input').checked = config.bot.listenEvents;
+                document.getElementById('selfListen-input').checked = config.bot.selfListen;
+                document.getElementById('forceLogin-input').checked = config.bot.forceLogin;
+                document.getElementById('botName-input').value = config.bot.botName;
+                document.getElementById('ownerName-input').value = config.bot.ownerName;
+                document.getElementById('ownerUid-input').value = config.bot.ownerUid;
+                document.getElementById('adminUids-input').value = config.bot.adminUids.join(', ');
+                document.getElementById('loginUsername-input').value = config.bot.login.username;
+                document.getElementById('loginPassword-input').value = config.bot.login.password;
+                document.getElementById('loggingLevel-input').value = config.logging.level;
+                document.getElementById('maxRetries-input').value = config.retries.maxRetries;
+                document.getElementById('retryDelay-input').value = config.retries.retryDelay;
+                document.getElementById('language-input').value = config.language;
+            } catch (error) {
+                console.error('Error loading config:', error);
+                alert('Failed to load configuration: ' + error.message);
+            }
+        }
+
+        document.getElementById('config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const saveButton = e.target.querySelector('button[type="submit"]');
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            showPreloader();
+
+            try {
+                const adminUidsInput = document.getElementById('adminUids-input').value;
+                const adminUids = adminUidsInput ? adminUidsInput.split(',').map(uid => uid.trim()) : [];
+
+                const newConfig = {
+                    bot: {
+                        prefix: document.getElementById('prefix-input').value,
+                        listenEvents: document.getElementById('listenEvents-input').checked,
+                        selfListen: document.getElementById('selfListen-input').checked,
+                        forceLogin: document.getElementById('forceLogin-input').checked,
+                        botName: document.getElementById('botName-input').value,
+                        ownerName: document.getElementById('ownerName-input').value,
+                        ownerUid: document.getElementById('ownerUid-input').value,
+                        adminUids: adminUids,
+                        login: {
+                            username: document.getElementById('loginUsername-input').value,
+                            password: document.getElementById('loginPassword-input').value
+                        }
+                    },
+                    logging: {
+                        level: document.getElementById('loggingLevel-input').value
+                    },
+                    retries: {
+                        maxRetries: parseInt(document.getElementById('maxRetries-input').value),
+                        retryDelay: parseInt(document.getElementById('retryDelay-input').value)
+                    },
+                    language: document.getElementById('language-input').value
+                };
+
+                const saveResponse = await fetch('/api/update-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newConfig)
+                });
+
+                const saveResult = await saveResponse.json();
+                console.log('Save config response:', saveResult);
+                if (!saveResult.success) {
+                    throw new Error('Failed to save configuration: ' + saveResult.message);
+                }
+
+             
+                const restartResponse = await fetch('/api/restart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const restartResult = await restartResponse.json();
+                console.log('Restart after save response:', restartResult);
+                if (restartResult.success) {
+                    alert('Configuration updated and bot restarted successfully');
+                    fetchStats(); 
+                } else {
+                    alert('Configuration updated, but failed to restart bot: ' + restartResult.message);
+                }
+            } catch (error) {
+                console.error('Error updating config or restarting bot:', error);
+                alert('Failed to update configuration or restart bot: ' + error.message);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+                hidePreloader();
+            }
+        });
+
+
+document.querySelector('[data-section="threads"]').addEventListener('click', () => fetchThreads(threadsCurrentPage));
+        document.querySelector('[data-section="users"]').addEventListener('click', () => fetchUsers(usersCurrentPage));
+        document.querySelector('[data-section="settings"]').addEventListener('click', () => loadConfig());
+
+      
+        document.querySelector('[data-section="dashboard"]').addEventListener('click', () => fetchStats());
+
+      
+        document.querySelector('[data-section="dashboard"]').click();
+
+       
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) { 
+                sidebar.classList.remove('w-14');
+                sidebar.classList.add('w-56');
+                const textLabels = document.querySelectorAll('.sidebar-icon span');
+                textLabels.forEach(label => {
+                    label.classList.remove('hidden');
+                    label.classList.add('inline');
+                });
+                const icons = document.querySelectorAll('.sidebar-icon i');
+                icons.forEach(icon => {
+                    icon.classList.add('w-6');
+                    icon.classList.remove('text-lg');
+                    icon.classList.add('text-base');
+                });
+                mobileMenuButton.innerHTML = '<i class="fas fa-bars"></i>';
+                sidebarExpanded = false;
+            } else {
+                if (!sidebarExpanded) {
+                    sidebar.classList.add('w-14');
+                    sidebar.classList.remove('w-56');
+                    const textLabels = document.querySelectorAll('.sidebar-icon span');
+                    textLabels.forEach(label => {
+                        label.classList.add('hidden');
+                        label.classList.remove('inline');
+                    });
+                    const icons = document.querySelectorAll('.sidebar-icon i');
+                    icons.forEach(icon => {
+                        icon.classList.remove('w-6');
+                        icon.classList.add('text-lg');
+                        icon.classList.remove('text-base');
+                    });
+                }
+            }
+        });
+
+      
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            alert('An unexpected error occurred: ' + event.reason.message);
+            hidePreloader();
+        });
+
+
+        async function checkBotStatus() {
+            try {
+                const response = await fetch('/api/stats');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch bot stats');
+                }
+                const stats = await response.json();
+                if (!stats.threadCount && !stats.userCount) {
+                    addLogEntry({ level: 'warning', message: 'Bot may be disconnected or not responding', timestamp: new Date().toISOString() });
+                }
+            } catch (error) {
+                addLogEntry({ level: 'error', message: 'Failed to check bot status: ' + error.message, timestamp: new Date().toISOString() });
+            }
+        }
+
+        
+        setInterval(checkBotStatus, 30000);
+
+      
+        document.getElementById('restart-bot').addEventListener('click', () => {
+            if (confirm('Are you sure you want to restart the bot? This will disconnect all active sessions.')) {
+                restartBot();
+            }
+        });
+
+     
+        let sessionTimeout;
+        function resetSessionTimeout() {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = setTimeout(() => {
+                alert('Session expired due to inactivity. Please log in again.');
+                window.location.href = '/login';
+            }, 30 * 60 * 1000); 
+        }
+
+
+        document.addEventListener('mousemove', resetSessionTimeout);
+        document.addEventListener('keypress', resetSessionTimeout);
+        resetSessionTimeout();
     </script>
 </body>
 </html>
