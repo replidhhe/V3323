@@ -12,11 +12,18 @@ const axios = require('axios');
 const SIM_API_URL = 'https://sim.api.nexalo.xyz/v1/chat';
 const API_KEY = 'MAINPOINT';
 const LANGUAGE = 'bn';
-const DEFAULT_QUESTION = 'ki koro';
+const DEFAULT_QUESTIONS = [
+    "bot"
+];
+
+function getRandomDefaultQuestion() {
+    return DEFAULT_QUESTIONS[Math.floor(Math.random() * DEFAULT_QUESTIONS.length)];
+}
+
 // ==========================
 
 module.exports = {
-    name: "bot",
+    name: "cat",
     version: "1.0.5",
     author: "Hridoy",
     description: "Chat with the Nexalo SIM API to get answers to your questions.",
@@ -24,8 +31,8 @@ module.exports = {
     commandCategory: "AI",
     guide: "Use {pn}bot <question> to ask a question.\n" +
            "Example: {pn}bot What is the weather like?",
-    cooldowns: 5,
-    usePrefix: true,
+    cooldowns: 1,
+    usePrefix: false,
 
     async execute({ api, event, args }) {
         const threadID = event.threadID;
@@ -38,7 +45,8 @@ module.exports = {
                 return api.sendMessage(`${config.bot.botName}: ❌ Invalid event data.`, threadID);
             }
 
-            const question = args.join(" ").trim() || DEFAULT_QUESTION;
+            const question = args.join(" ").trim() || getRandomDefaultQuestion();
+
             logger.info(`Received command: .bot ${question} in thread ${threadID}`);
 
             // Prepare API payload
@@ -61,10 +69,10 @@ module.exports = {
             // Handle API response
             if (res.data.status_code === 200 && res.data.status === 'OK' && res.data.data && res.data.data.answer) {
                 const answer = res.data.data.answer;
-                logger.info(`Sending answer: ${answer}`);
+                logger.info(`Sending answer: {answer}`);
                 await new Promise((resolve, reject) => {
                     api.sendMessage(
-                        `${config.bot.botName}: ${answer}`,
+                        answer,
                         threadID,
                         (err) => {
                             if (err) {

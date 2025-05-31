@@ -10,6 +10,8 @@ class CommandHandler {
         this.api = api;
         this.commands = new Map();
         this.cooldowns = new Map();
+        this.reactionHandlers = new Map();
+        this.replyHandlers = new Map();
         this.db = null;
         this.initDb();
         this.loadCommands();
@@ -70,6 +72,7 @@ class CommandHandler {
         let commandName;
         let args;
 
+
         if (bodyLower === prefix.toLowerCase()) {
             commandName = "prefix";
             args = [];
@@ -78,6 +81,7 @@ class CommandHandler {
             commandName = parts[0].toLowerCase();
             args = parts.slice(1);
         } else {
+    
             const parts = event.body.trim().split(' ');
             commandName = parts[0].toLowerCase();
             args = parts.slice(1);
@@ -86,7 +90,17 @@ class CommandHandler {
         const command = this.commands.get(commandName);
         if (!command) return;
 
-        if (command.usePrefix && !event.body.toLowerCase().startsWith(prefix.toLowerCase())) return;
+   
+        if (command.usePrefix && !event.body.toLowerCase().startsWith(prefix.toLowerCase())) {
+            logger.debug(`Command ${commandName} requires prefix but none was used`);
+            return;
+        }
+
+     
+        if (!command.usePrefix && event.body.toLowerCase().startsWith(prefix.toLowerCase())) {
+            logger.debug(`Command ${commandName} does not use prefix but message starts with prefix`);
+            return;
+        }
 
         if (command.adminOnly) {
             const adminUids = config.bot.adminUids;
@@ -118,6 +132,24 @@ class CommandHandler {
         } catch (err) {
             logger.error(`Command ${command.name} failed: ${err.message}`);
             this.api.sendMessage('An error occurred while executing the command.', event.threadID);
+        }
+    }
+
+    async handleReaction(event) {
+        if (!event || !event.messageID) return;
+        const handler = this.reactionHandlers.get(event.messageID);
+        if (handler && event.userID === handler.authorID) {
+            await handler.onReaction(event);
+            this.reactionHandlers.delete(event.messageID);
+        }
+    }
+
+    async handleReply(event) {
+        if (!event || !event.messageReply) return;
+        const handler = this.replyHandlers.get(event.messageReply.messageID);
+        if (handler && event.senderID === handler.authorID) {
+            await handler.onReply(event);
+            this.replyHandlers.delete(event.messageReply.messageID);
         }
     }
 }
