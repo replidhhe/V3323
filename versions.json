@@ -1,6 +1,6 @@
 [
     {
-        "version": "2.0.0",
+        "version": "1.0.0",
         "files": {},
         "deleteFiles": {},
         "reinstallDependencies": false
@@ -14,5 +14,13 @@
         },
         "deleteFiles": {},
         "reinstallDependencies": true
+    },
+    {
+        "version": "1.0.2",
+        "files": {
+            "modules/commands/hello.js": "Added test command"
+        },
+        "deleteFiles": {},
+        "reinstallDependencies": false
     }
 ]
