@@ -1,9 +1,3 @@
-/******************************************************************************
- * WARNING: Use your own API to send your bot's name in "Who are you?" kind   *
- * of questions. This feature is expected to be available in a future API    *
- * update. Ensure to implement this custom behavior for now.                 *
- ******************************************************************************/
-
 const config = require('../../config/config.json');
 const logger = require('../../includes/logger');
 const axios = require('axios');
@@ -19,35 +13,30 @@ const DEFAULT_QUESTIONS = [
 function getRandomDefaultQuestion() {
     return DEFAULT_QUESTIONS[Math.floor(Math.random() * DEFAULT_QUESTIONS.length)];
 }
-
 // ==========================
 
 module.exports = {
     name: "cat",
     version: "1.0.5",
     author: "Hridoy",
-    description: "Chat with the Nexalo SIM API to get answers to your questions.",
+    description: "Chat with the Nexalo SIM API by sending a question or command.",
     adminOnly: false,
     commandCategory: "AI",
-    guide: "Use {pn}bot <question> to ask a question.\n" +
-           "Example: {pn}bot What is the weather like?",
+    guide: "Use {pn}cat <question> to ask a question.\n" +
+           "Example: {pn}cat What is the weather like?",
     cooldowns: 1,
     usePrefix: false,
 
     async execute({ api, event, args }) {
-        const threadID = event.threadID;
-        const messageID = event.messageID;
+        if (!event || !event.threadID || !event.messageID) {
+            logger.error("Invalid event object in cat command");
+            return api.sendMessage(`${config.bot.botName}: ❌ Invalid event data.`, event.threadID);
+        }
 
         try {
-            // Validate event object
-            if (!event || !threadID || !messageID) {
-                logger.error("Invalid event object in bot command", { event });
-                return api.sendMessage(`${config.bot.botName}: ❌ Invalid event data.`, threadID);
-            }
-
             const question = args.join(" ").trim() || getRandomDefaultQuestion();
 
-            logger.info(`Received command: .bot ${question} in thread ${threadID}`);
+            logger.info(`Received command: .cat ${question} in thread ${event.threadID}`);
 
             // Prepare API payload
             const payload = {
@@ -61,19 +50,19 @@ module.exports = {
             // Send request to Nexalo SIM API
             const res = await axios.post(SIM_API_URL, payload, {
                 headers: { 'Content-Type': 'application/json' },
-                timeout: 30000 // 30-second timeout
+                timeout: 30000 
             });
 
             logger.info(`API response received: ${JSON.stringify(res.data)}`);
 
-            // Handle API response
+          
             if (res.data.status_code === 200 && res.data.status === 'OK' && res.data.data && res.data.data.answer) {
                 const answer = res.data.data.answer;
-                logger.info(`Sending answer: {answer}`);
+                logger.info(`Sending answer: ${answer}`);
                 await new Promise((resolve, reject) => {
                     api.sendMessage(
                         answer,
-                        threadID,
+                        event.threadID,
                         (err) => {
                             if (err) {
                                 logger.error(`Failed to send answer: ${err.message}`);
@@ -82,7 +71,8 @@ module.exports = {
                                 logger.info("Answer sent successfully");
                                 resolve();
                             }
-                        }
+                        },
+                        event.messageID
                     );
                 });
             } else {
@@ -91,7 +81,7 @@ module.exports = {
                 await new Promise((resolve, reject) => {
                     api.sendMessage(
                         `${config.bot.botName}: API Error: ${errorMessage}`,
-                        threadID,
+                        event.threadID,
                         (err) => {
                             if (err) {
                                 logger.error(`Failed to send API error message: ${err.message}`);
@@ -100,7 +90,8 @@ module.exports = {
                                 logger.info("API error message sent successfully");
                                 resolve();
                             }
-                        }
+                        },
+                        event.messageID 
                     );
                 });
             }
@@ -114,7 +105,7 @@ module.exports = {
             await new Promise((resolve, reject) => {
                 api.sendMessage(
                     `${config.bot.botName}: Sorry, I couldn't reach the API. Please try again later.`,
-                    threadID,
+                    event.threadID,
                     (err) => {
                         if (err) {
                             logger.error(`Failed to send error message: ${err.message}`);
@@ -123,7 +114,8 @@ module.exports = {
                             logger.info("Error message sent successfully");
                             resolve();
                         }
-                    }
+                    },
+                    event.messageID 
                 );
             });
         }
