@@ -18,7 +18,7 @@
     {
         "version": "1.0.3",
         "files": {
-            "modules/commands/hello.js": "Added test command"
+            "modules/commands/test.js": "Added test command"
         },
         "deleteFiles": {},
         "reinstallDependencies": false
