@@ -1,6 +1,6 @@
 {
   "name": "nexasim-v2",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "description": "A customizable and scalable Facebook Messenger bot designed for group chat management, fun, and automation.",
   "main": "index.js",
   "scripts": {
