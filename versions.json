@@ -1,0 +1,18 @@
+[
+    {
+        "version": "1.0.0",
+        "files": {},
+        "deleteFiles": {},
+        "reinstallDependencies": false
+    },
+    {
+        "version": "1.0.1",
+        "files": {
+            "index.js": "Updated main bot logic",
+            "src/handlers/CommandHandler.js": "Added reaction and reply handling",
+            "modules/commands/update.js": "Added update command"
+        },
+        "deleteFiles": {},
+        "reinstallDependencies": true
+    }
+]
