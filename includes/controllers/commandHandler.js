@@ -40,7 +40,7 @@ class CommandHandler {
 
         const botID = this.api.getCurrentUserID();
         if (event.senderID === botID) {
-            logger.debug('Ignoring message from bot itself');
+            logger.verbose('Ignoring message from bot itself');
             return;
         }
 
@@ -57,7 +57,7 @@ class CommandHandler {
             const adminOnlyMode = adminOnlySetting ? adminOnlySetting.value : false;
 
             const adminUids = config.bot.adminUids || [];
-            if (adminOnlyMode && !adminUids.includes(event.senderID)) {
+            if (adminOnlyMode && !adminUids.includes(String(event.senderID))) {
                 this.api.sendMessage(
                     `${config.bot.botName}: Admin-only mode is on. Only admins can use bot commands.`,
                     event.threadID,
@@ -72,7 +72,6 @@ class CommandHandler {
         let commandName;
         let args;
 
-
         if (bodyLower === prefix.toLowerCase()) {
             commandName = "prefix";
             args = [];
@@ -81,7 +80,6 @@ class CommandHandler {
             commandName = parts[0].toLowerCase();
             args = parts.slice(1);
         } else {
-    
             const parts = event.body.trim().split(' ');
             commandName = parts[0].toLowerCase();
             args = parts.slice(1);
@@ -90,22 +88,32 @@ class CommandHandler {
         const command = this.commands.get(commandName);
         if (!command) return;
 
-   
         if (command.usePrefix && !event.body.toLowerCase().startsWith(prefix.toLowerCase())) {
-            logger.debug(`Command ${commandName} requires prefix but none was used`);
+            logger.verbose(`Command ${command.name} requires prefix but none was used`);
+            this.api.sendMessage(
+                `${config.bot.botName}: Prefix '${prefix}' is required for the ${command.name} command.`,
+                event.threadID,
+                event.messageID
+            );
             return;
         }
 
-     
         if (!command.usePrefix && event.body.toLowerCase().startsWith(prefix.toLowerCase())) {
-            logger.debug(`Command ${commandName} does not use prefix but message starts with prefix`);
+            logger.verbose(`Command ${command.name} does not require prefix but prefix was used`);
+            this.api.sendMessage(
+                `${config.bot.botName}: No prefix is required for the ${command.name} command.`,
+                event.threadID,
+                event.messageID
+            );
             return;
         }
 
         if (command.adminOnly) {
-            const adminUids = config.bot.adminUids;
-            if (!adminUids.includes(event.senderID)) {
-                this.api.sendMessage('This command is for admins only.', event.threadID);
+            const adminUids = config.bot.adminUids || [];
+            logger.verbose(`Admin check: senderID=${event.senderID}, adminUids=${JSON.stringify(adminUids)}`);
+            if (!adminUids.includes(String(event.senderID))) {
+                logger.warn(`Unauthorized command ${commandName} attempt by ${event.senderID} in thread ${event.threadID}`);
+                this.api.sendMessage(`${config.bot.botName}: ❌ This command is for admins only.`, event.threadID);
                 return;
             }
         }
@@ -127,10 +135,11 @@ class CommandHandler {
         }
 
         try {
+            logger.verbose(`Executing command: ${command.name} in thread ${event.threadID}`);
             await command.execute({ api: this.api, event, args, commandHandler: this });
             this.cooldowns.set(cooldownKey, now + cooldownTime);
         } catch (err) {
-            logger.error(`Command ${command.name} failed: ${err.message}`);
+            logger.error(`Command ${commandName} failed: ${err.message}`);
             this.api.sendMessage('An error occurred while executing the command.', event.threadID);
         }
     }
