@@ -201,38 +201,42 @@ async function startBot() {
     const ownerNotification = new OwnerNotification(apiInstance);
     messageEvent.start(true);
     ownerNotification.start();
-
+    
     apiInstance.listenMqtt((err, event) => {
       if (err) {
         logger.error(`MQTT Error: ${err.message}`);
         return;
       }
-
+    
       if (!event) {
         logger.error('MQTT received null or undefined event');
         return;
       }
-
+    
       if (!event.type) {
         logger.error('MQTT event missing type property', { event });
         return;
       }
-
+    
       if ((event.type === 'message' || event.type === 'message_reply' || event.type === 'message_reaction') &&
           (!event.threadID || !event.messageID)) {
         logger.error(`Invalid event object for ${event.type}: missing threadID or messageID`, { event });
         return;
       }
-
+    
       try {
+  
+        eventHandler.handleEvent(event);
+    
+
         if (event.type === 'message' || event.type === 'message_reply') {
           commandHandler.handleCommand(event);
         }
-
+    
         if (event.type === 'message_reaction') {
           commandHandler.handleReaction(event);
         }
-
+    
         if (event.type === 'message_reply') {
           commandHandler.handleReply(event);
         }
