@@ -253,7 +253,7 @@ const originalLogger = {
   info: logger.info,
   error: logger.error,
   warn: logger.warn,
-  debug: logger.debug
+  verbose: logger.verbose 
 };
 
 logger.info = (message, ...args) => {
@@ -271,7 +271,7 @@ logger.warn = (message, ...args) => {
   loggerEmitter.emit('log', { level: 'warning', message: `${message} ${args.join(' ')}`, timestamp: new Date().toISOString() });
 };
 
-logger.debug = (message, ...args) => {
-  originalLogger.debug(message, ...args);
-  loggerEmitter.emit('log', { level: 'debug', message: `${message} ${args.join(' ')}`, timestamp: new Date().toISOString() });
+logger.verbose = (message, ...args) => {
+  originalLogger.verbose(message, ...args);
+  loggerEmitter.emit('log', { level: 'verbose', message: `${message} ${args.join(' ')}`, timestamp: new Date().toISOString() });
 };
