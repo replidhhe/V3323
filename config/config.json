@@ -1,19 +1,11 @@
 {
-    "DeveloperMode": false,
-    "autoCreateDB": true,
-    "MAINTENANCE_MODE": false,
-    "iconUnsend": {
-        "status": true,
-        "icon": "😠"
-    },
-{
   "bot": {
-    "prefix": "-",
+    "prefix": "!",
     "listenEvents": true,
     "selfListen": false,
     "forceLogin": true,
-    "botName": "💤📿𝐑𝐚𝐡𝐚𝐝📿💤",
-    "ownerName": "💤📿𝐑𝐚𝐡𝐚𝐝📿💤",
+    "botName": "The kimg is back 🔙😾",
+    "ownerName": "Rahad",
     "ownerUid": "61574627006558",
     "adminUids": [
       "61574627006558"
