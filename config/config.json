@@ -1,14 +1,22 @@
 {
+    "DeveloperMode": false,
+    "autoCreateDB": true,
+    "MAINTENANCE_MODE": false,
+    "iconUnsend": {
+        "status": true,
+        "icon": "😠"
+    },
+{
   "bot": {
-    "prefix": "!",
+    "prefix": "-",
     "listenEvents": true,
     "selfListen": false,
     "forceLogin": true,
-    "botName": "NexaSim V2",
-    "ownerName": "Hridoy",
-    "ownerUid": "61552837791926",
+    "botName": "💤📿𝐑𝐚𝐡𝐚𝐝📿💤",
+    "ownerName": "💤📿𝐑𝐚𝐡𝐚𝐝📿💤",
+    "ownerUid": "61574627006558",
     "adminUids": [
-      "61552837791926"
+      "61574627006558"
     ],
     "login": {
       "username": "your_username_here",
